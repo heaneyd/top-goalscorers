@@ -53,7 +53,9 @@ default_data = [
     ("Eliezer Mayenda", 7.50, 6.50, 1.00),
 ]
 
-df = st.data_editor(pd.DataFrame(default_data), num_rows="dynamic")
+columns = ["Player", "Buy", "Sell", "SoFar"]
+df = st.data_editor(pd.DataFrame(default_data, columns=columns), num_rows="dynamic")
+
 
 # --- Simulation button ---
 if st.button("Run Simulation"):
