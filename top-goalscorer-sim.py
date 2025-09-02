@@ -86,6 +86,6 @@ if st.button("Run Simulation"):
     results["Win %"] = (win_prob * 100).round(2)
     results["Top 4 %"] = (top4_prob * 100).round(2)
     results["Win odds"] = (1/win_prob).round(2)
-    results["Top 4 dds"] = (1/top4_prob).round(2)
+    results["Top 4 odds"] = (1/top4_prob).round(2)
 
     st.dataframe(results.sort_values("Win %", ascending=False))
