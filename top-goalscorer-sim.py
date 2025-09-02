@@ -81,7 +81,7 @@ if st.button("Run Simulation"):
     top4_prob = (is_top4 * (4.0 / is_top4.sum(axis=1))[:, None]).sum(axis=0) / N
 
     results = df.copy()
-    results.drop(columns = ["Buy","Sell","SoFar"])
+    results.drop(columns = ["Buy","Sell","SoFar"], inplace = True)
     results["Expected Final Goals"] = so_far + mus
     results["Win %"] = (win_prob * 100).round(2)
     results["Top 4 %"] = (top4_prob * 100).round(2)
