@@ -7,7 +7,7 @@ st.title("Premier League - Top Goalscorer")
 # --- Inputs ---
 st.sidebar.header("Simulation Controls")
 N = st.sidebar.number_input("Number of simulations", 10000, 500000, 100000, step=10000)
-k = st.sidebar.number_input("Dispersion parameter (k)", 1.0, 50.0, 8.0, step=0.5)
+#k = st.sidebar.number_input("Dispersion parameter (k)", 1.0, 50.0, 8.0, step=0.5)
 
 # Example default player data
 default_data = [
@@ -68,7 +68,7 @@ df_edit = st.data_editor(
     column_config={
         "Midpoint": st.column_config.NumberColumn("Midpoint", step=0.25),
         "SoFar": st.column_config.NumberColumn("SoFar", step=0.25),
-        "k": st.column_config.NumberColumn("Dispersion (k)", step=0.5, min_value=0.5),
+        "k": st.column_config.number_input("Dispersion (k)", 1.0, 50.0, 8.0, step=0.5),
     }
 )
 
