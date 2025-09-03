@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-st.title("Golden Boot Simulator")
+st.title("Premier League - Top Goalscorer")
 
 # --- Inputs ---
 st.sidebar.header("Simulation Controls")
@@ -54,19 +54,37 @@ default_data = [
 ]
 
 columns = ["Player", "Buy", "Sell", "SoFar"]
-df = st.data_editor(pd.DataFrame(default_data, columns=columns), num_rows="dynamic")
+df_source = pd.DataFrame(default_data, columns=columns)
+
+# --- Create editable midpoint table ---
+df_mid = df_source.copy()
+df_mid["Midpoint"] = df_source[["Buy", "Sell"]].mean(axis=1)
+df_mid["k"] = 8.0  # default dispersion
+
+# Show editor with +/- controls
+df_edit = st.data_editor(
+    df_mid[["Player", "Midpoint", "SoFar", "k"]],
+    num_rows="dynamic",
+    column_config={
+        "Midpoint": st.column_config.NumberColumn("Midpoint", step=0.25),
+        "SoFar": st.column_config.NumberColumn("SoFar", step=0.25),
+        "k": st.column_config.NumberColumn("Dispersion (k)", step=0.5, min_value=0.5),
+    }
+)
 
 
 # --- Simulation button ---
 if st.button("Run Simulation"):
 
-    mus = (df[["Buy","Sell"]].mean(axis=1) - df["SoFar"]).clip(lower=0).values
-    so_far = df["SoFar"].values
+    mus = (df_edit["Midpoint"] - df_edit["SoFar"]).clip(lower=0).values
+    so_far = df_edit["SoFar"].values
+    ks = df_edit["k"].values
 
     rng = np.random.default_rng(2025)
-    gamma_scales = np.where(mus > 0, mus / k, 0.0)
+    gamma_scales = np.where(mus > 0, mus / ks, 0.0)
 
-    lam_draws = rng.gamma(shape=k, scale=1.0, size=(N, len(df))) * gamma_scales[None, :]
+    # Player-specific ks in Gamma
+    lam_draws = rng.gamma(shape=ks, scale=1.0, size=(N, len(df_edit))) * gamma_scales[None, :]
     remaining = rng.poisson(lam=lam_draws)
     final = remaining + so_far
 
@@ -80,7 +98,7 @@ if st.button("Run Simulation"):
     is_top4 = final >= thresholds[:, None]
     top4_prob = (is_top4 * (4.0 / is_top4.sum(axis=1))[:, None]).sum(axis=0) / N
 
-    results = df.copy()
+    results = df_source.copy()
     results.drop(columns = ["Buy","Sell","SoFar"], inplace = True)
     results["Expected Final Goals"] = so_far + mus
     results["Win %"] = (win_prob * 100).round(2)
