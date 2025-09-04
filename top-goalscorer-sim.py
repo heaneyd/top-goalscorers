@@ -2,7 +2,16 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
+st.set_page_config(layout="wide") 
+
 st.title("Premier League - Top Goalscorer")
+
+st.markdown(
+    """
+    **Note:** The <span style='color:#ff4b4b'><b>Dispersion (k)</b></span> parameter controls the spread of possible outcomes for each player.  A higher value means the player's goal total is more predictable (less variance), while a lower value means more uncertainty and wider possible outcomes.  Using 8 as default was a good fit to the betfair exchange odds.
+    """,
+    unsafe_allow_html=True
+)
 
 # --- Inputs ---
 st.sidebar.header("Simulation Controls")
@@ -56,21 +65,34 @@ default_data = [
 columns = ["Player", "Buy", "Sell", "SoFar"]
 df_source = pd.DataFrame(default_data, columns=columns)
 
-# --- Create editable midpoint table ---
-df_mid = df_source.copy()
-df_mid["Midpoint"] = df_source[["Buy", "Sell"]].mean(axis=1)
-df_mid["k"] = 8.0  # default dispersion
+# --- Session state for data ---
+if "df_mid" not in st.session_state:
+    df_mid = pd.DataFrame(default_data, columns=columns)
+    df_mid["Midpoint"] = df_mid[["Buy", "Sell"]].mean(axis=1)
+    df_mid["k"] = 8.0
+    df_mid["Win %"] = 0.0
+    df_mid["Top 4 %"] = 0.0
+    df_mid["Win odds"] = 0.0
+    df_mid["Top 4 odds"] = 0.0
+    df_mid["Distribution"] = [[] for _ in range(len(df_mid))]  # Add empty distribution column
+    st.session_state.df_mid = df_mid
 
 # Show editor with +/- controls
 df_edit = st.data_editor(
-    df_mid[["Player", "Midpoint", "SoFar", "k"]],
+    st.session_state.df_mid.drop(columns=["Buy", "Sell"]),
     num_rows="dynamic",
     column_config={
         "Midpoint": st.column_config.NumberColumn("Midpoint", step=0.25),
         "SoFar": st.column_config.NumberColumn("SoFar", step=0.25),
         "k": st.column_config.NumberColumn("Dispersion (k)", step=0.5),
-    }
+        "Distribution": st.column_config.BarChartColumn("Distribution", width="small"),
+    }, key  ="grid",
+    use_container_width=True
 )
+# --- Remember changes to Midpoint and k ---
+st.session_state.df_mid["Midpoint"] = df_edit["Midpoint"]
+st.session_state.df_mid["k"] = df_edit["k"]
+st.session_state.df_mid["SoFar"] = df_edit["SoFar"]
 
 
 # --- Simulation button ---
@@ -98,12 +120,19 @@ if st.button("Run Simulation"):
     is_top4 = final >= thresholds[:, None]
     top4_prob = (is_top4 * (4.0 / is_top4.sum(axis=1))[:, None]).sum(axis=0) / N
 
-    results = df_source.copy()
-    results.drop(columns = ["Buy","Sell","SoFar"], inplace = True)
-    results["Expected Final Goals"] = so_far + mus
-    results["Win %"] = (win_prob * 100).round(2)
-    results["Top 4 %"] = (top4_prob * 100).round(2)
-    results["Win odds"] = (1/win_prob).round(2)
-    results["Top 4 odds"] = (1/top4_prob).round(2)
 
-    st.dataframe(results.sort_values("Win %", ascending=False))
+    st.session_state.df_mid.loc[:, "Win %"] = (win_prob * 100).round(2)
+    st.session_state.df_mid.loc[:, "Top 4 %"] = (top4_prob * 100).round(2)
+    st.session_state.df_mid.loc[:, "Win odds"] = (1/win_prob).round(2)
+    st.session_state.df_mid.loc[:, "Top 4 odds"] = (1/top4_prob).round(2)
+
+    # Add spark bar distribution for each player
+    bins = np.arange(0, 50)
+    distributions = [
+        np.histogram(final[:, i], bins=bins)[0].tolist()
+        for i in range(final.shape[1])
+    ]
+    st.session_state.df_mid["Distribution"] = distributions
+
+    st.rerun()
+
