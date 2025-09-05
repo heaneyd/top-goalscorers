@@ -85,8 +85,13 @@ df_edit = st.data_editor(
         "Midpoint": st.column_config.NumberColumn("Midpoint", step=0.25),
         "SoFar": st.column_config.NumberColumn("SoFar", step=0.25),
         "k": st.column_config.NumberColumn("Dispersion (k)", step=0.5),
+        "Win %": st.column_config.NumberColumn("🏆 Win %", disabled=True),
+        "Top 4 %": st.column_config.NumberColumn("🥇 Top 4 %", disabled=True),
+        "Win odds": st.column_config.NumberColumn("🏆 Win odds", disabled=True),
+        "Top 4 odds": st.column_config.NumberColumn("🥇 Top 4 odds", disabled=True),
         "Distribution": st.column_config.BarChartColumn("Distribution", width="small"),
-    }, key  ="grid",
+    },
+    key  ="grid",
     use_container_width=True
 )
 # --- Remember changes to Midpoint and k ---
