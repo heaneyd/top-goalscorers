@@ -8,7 +8,9 @@ st.title("Premier League - Top Goalscorer")
 
 st.markdown(
     """
-    **Note:** The <span style='color:#ff4b4b'><b>Dispersion (k)</b></span> parameter controls the spread of possible outcomes for each player.  A higher value means the player's goal total is more predictable (less variance), while a lower value means more uncertainty and wider possible outcomes.  Using 8 as default was a good fit to the betfair exchange odds.
+    **Note:** The <span style='color:#ff4b4b'><b>Dispersion (k)</b></span> parameter controls the spread of possible outcomes for each player.  A higher value means the player's goal total is more predictable (less variance), while a lower value means more uncertainty and wider possible outcomes.  Using 20.0 as default, since it was a good fit to the previous season long goals marktes on the betfair exchange.
+    <p/>
+    <a href = 'https://fog2014.blogspot.com/2025/09/premier-league-top-goalscorer.html'>Additional Notes here.</a>
     """,
     unsafe_allow_html=True
 )
@@ -69,7 +71,7 @@ df_source = pd.DataFrame(default_data, columns=columns)
 if "df_mid" not in st.session_state:
     df_mid = pd.DataFrame(default_data, columns=columns)
     df_mid["Midpoint"] = df_mid[["Buy", "Sell"]].mean(axis=1)
-    df_mid["k"] = 8.0
+    df_mid["k"] = 20.0
     df_mid["Win %"] = 0.0
     df_mid["Top 4 %"] = 0.0
     df_mid["Win odds"] = 0.0
